@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
         cap >> frame; // Capture a frame from the webcam
 
         if(p_debug_wnd) {
+            // qDebug() << frame.cols << "x" << frame.rows << " - " << frame.step;
+
             QImage qImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
             p_debug_wnd->setPixmap(QPixmap::fromImage(qImage.rgbSwapped()));
             p_debug_wnd->setScaledContents(true);
@@ -48,15 +50,11 @@ int main(int argc, char *argv[])
 
         QByteArray data;
         QDataStream stream(&data, QIODevice::WriteOnly);
-        auto width = reinterpret_cast<int32_t>(frame.size().width);
-        auto height = reinterpret_cast<int32_t>(frame.size().height);
-        stream << width << height;
-        stream.writeRawData(reinterpret_cast<const char*>(frame.data),
-                            width*height);
+        stream << frame.cols << frame.rows << (int32_t)frame.step << frame.data;
         socket.writeDatagram(data, QHostAddress::Broadcast, port);
     });
 
-    timer.start(30); // Update every 30 milliseconds
+    timer.start(100); // Update every X milliseconds
 
     return app.exec();
 }
