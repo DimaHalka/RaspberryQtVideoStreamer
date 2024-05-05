@@ -1,4 +1,4 @@
-#include <QCoreApplication>
+#include <QApplication>
 #include <QImage>
 #include <QLabel>
 #include <QUdpSocket>
@@ -7,16 +7,24 @@ constexpr int port = 12345;
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
     
     QUdpSocket socket;
-    socket.bind(QHostAddress::AnyIPv4, port);
-
+    if(!socket.bind(QHostAddress::AnyIPv4, port)){
+        qDebug() << "Error: Unable to bind to port " << port;
+        return -1;
+    }
+    
+    qDebug() << "Bound to port " << port;
+    
+    QLabel main_wnd;
+    main_wnd.show();
+    
     QObject::connect(&socket, &QUdpSocket::readyRead, [&]() {
-        QLabel main_wnd;
-        main_wnd.show();
-        
+        qDebug() << ".";
+
         while (socket.hasPendingDatagrams()) {
+            
             QByteArray datagram;
             datagram.resize(socket.pendingDatagramSize());
             QHostAddress sender;
@@ -25,14 +33,15 @@ int main(int argc, char *argv[])
             socket.readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 
             QDataStream stream(datagram);
-            int32_t width, height;
-            stream >> width >> height;
+            int32_t width, height, step;
 
             QByteArray imageData;
-            stream >> imageData;
+            stream >> width >> height >> step >> imageData;
+
+            qDebug() << width << "x" << height << "x" << step;
 
             QImage img(reinterpret_cast<const uchar*>(imageData.data()),
-                       width, height, QImage::Format_RGB888);
+                       width, height, step, QImage::Format_RGB888);
             
             main_wnd.setPixmap(QPixmap::fromImage(img.rgbSwapped()));
             main_wnd.setScaledContents(true);
