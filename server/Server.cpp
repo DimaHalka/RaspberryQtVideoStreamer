@@ -48,7 +48,11 @@ int main(int argc, char *argv[])
 
         QByteArray data;
         QDataStream stream(&data, QIODevice::WriteOnly);
-        stream << frame.size().width << frame.size().height << frame.data;
+        auto width = reinterpret_cast<int32_t>(frame.size().width);
+        auto height = reinterpret_cast<int32_t>(frame.size().height);
+        stream << width << height;
+        stream.writeRawData(reinterpret_cast<const char*>(frame.data),
+                            width*height);
         socket.writeDatagram(data, QHostAddress::Broadcast, port);
     });
 
