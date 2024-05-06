@@ -37,21 +37,21 @@ int main(int argc, char *argv[])
     QTimer timer;
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         Mat frame;
-        cap >> frame; // Capture a frame from the webcam
+        cap >> frame;
 
-        if(p_debug_wnd) {
-            // qDebug() << frame.cols << "x" << frame.rows << " - " << frame.step;
+        QImage q_image(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
 
-            QImage qImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
-            p_debug_wnd->setPixmap(QPixmap::fromImage(qImage.rgbSwapped()));
-            p_debug_wnd->setScaledContents(true);
-            p_debug_wnd->adjustSize();
-        }
 
         QByteArray data;
         QDataStream stream(&data, QIODevice::WriteOnly);
-        stream << frame.cols << frame.rows << (int32_t)frame.step << frame.data;
+        stream << q_image;
         socket.writeDatagram(data, QHostAddress::Broadcast, port);
+
+        if(p_debug_wnd) {
+            p_debug_wnd->setPixmap(QPixmap::fromImage(q_image.rgbSwapped()));
+            p_debug_wnd->setScaledContents(true);
+            p_debug_wnd->adjustSize();
+        }
     });
 
     timer.start(100); // Update every X milliseconds

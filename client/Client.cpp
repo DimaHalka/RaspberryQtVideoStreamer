@@ -21,8 +21,6 @@ int main(int argc, char *argv[])
     main_wnd.show();
     
     QObject::connect(&socket, &QUdpSocket::readyRead, [&]() {
-        qDebug() << ".";
-
         while (socket.hasPendingDatagrams()) {
             
             QByteArray datagram;
@@ -33,17 +31,10 @@ int main(int argc, char *argv[])
             socket.readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 
             QDataStream stream(datagram);
-            int32_t width, height, step;
-
-            QByteArray imageData;
-            stream >> width >> height >> step >> imageData;
-
-            qDebug() << width << "x" << height << "x" << step;
-
-            QImage img(reinterpret_cast<const uchar*>(imageData.data()),
-                       width, height, step, QImage::Format_RGB888);
+            QImage q_image;
+            stream >> q_image;
             
-            main_wnd.setPixmap(QPixmap::fromImage(img.rgbSwapped()));
+            main_wnd.setPixmap(QPixmap::fromImage(q_image.rgbSwapped()));
             main_wnd.setScaledContents(true);
             main_wnd.adjustSize();
         }
