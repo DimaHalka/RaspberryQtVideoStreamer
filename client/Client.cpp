@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     
     QObject::connect(&socket, &QUdpSocket::readyRead, [&]() {
         while (socket.hasPendingDatagrams()) {
-            
             QByteArray datagram;
             datagram.resize(socket.pendingDatagramSize());
             QHostAddress sender;
