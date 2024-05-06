@@ -38,15 +38,11 @@ int main(int argc, char *argv[])
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         Mat frame;
         cap >> frame;
-
         QImage q_image(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
-
-
         QByteArray data;
         QDataStream stream(&data, QIODevice::WriteOnly);
-        stream << q_image;
+        stream << q_image.scaled(50, 50);
         socket.writeDatagram(data, QHostAddress::Broadcast, port);
-
         if(p_debug_wnd) {
             p_debug_wnd->setPixmap(QPixmap::fromImage(q_image.rgbSwapped()));
             p_debug_wnd->setScaledContents(true);
@@ -54,7 +50,7 @@ int main(int argc, char *argv[])
         }
     });
 
-    timer.start(100); // Update every X milliseconds
+    timer.start(1000); // Update interval in milliseconds
 
     return app.exec();
 }
